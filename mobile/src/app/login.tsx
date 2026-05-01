@@ -56,6 +56,7 @@ export default function LoginScreen() {
       if (data?.url) {
         const result = await WebBrowser.openAuthSessionAsync(data.url, 'coopledger://auth/callback');
         if (result.type === 'success') {
+          await authClient.getSession();
           router.replace('/');
         }
       }
