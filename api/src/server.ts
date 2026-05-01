@@ -19,7 +19,7 @@ const redis = new Redis(process.env.REDIS_URL as string, {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.all("/api/auth/*", toNodeHandler(auth));
+app.all("/api/auth/{*any}", toNodeHandler(auth));
 
 app.post("/api/auth/whatsapp/send-code", async (req, res) => {
 	const { userId, phoneNumber } = req.body;
