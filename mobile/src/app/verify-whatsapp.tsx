@@ -19,7 +19,7 @@ export default function VerifyWhatsAppScreen() {
 
   const sendCode = async () => {
     try {
-      const response = await fetch(\`\${process.env.API_BASE_URL}/api/auth/whatsapp/send-code\`, {
+      const response = await fetch(`${process.env.API_BASE_URL}/api/auth/whatsapp/send-code`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, phoneNumber }),
@@ -39,7 +39,7 @@ export default function VerifyWhatsAppScreen() {
 
     setLoading(true);
     try {
-      const response = await fetch(\`\${process.env.API_BASE_URL}/api/auth/whatsapp/verify\`, {
+      const response = await fetch(`${process.env.API_BASE_URL}/api/auth/whatsapp/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, code }),
@@ -119,10 +119,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     borderWidth: 1,
     borderColor: '#eee',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
+    boxShadow: '0px 2px 3px rgba(0, 0, 0, 0.05)',
     elevation: 2,
   },
   title: {
@@ -150,10 +147,7 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     borderWidth: 1,
     borderColor: '#eee',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 1,
+    boxShadow: '0px 1px 1px rgba(0, 0, 0, 0.05)',
     elevation: 2,
   },
   divider: {
