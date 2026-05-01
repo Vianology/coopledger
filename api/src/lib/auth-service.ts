@@ -29,9 +29,9 @@ export const AuthService = {
   },
 
   async createSession(userId: string) {
-    const token = this.generateToken(userId);
+    const token = await this.generateToken(userId);
     const sessionId = crypto.randomUUID();
-    
+
     await db.insert(session).values({
       id: sessionId,
       token,
@@ -43,17 +43,17 @@ export const AuthService = {
   },
 
   async validateSession(token: string) {
-    const payload = this.verifyToken(token);
+    const payload = await this.verifyToken(token);
     if (!payload) return null;
 
-    const session = await db.query.session.findFirst({
+    const sessionData = await db.query.session.findFirst({
       where: eq(session.token, token),
     });
 
-    if (!session || session.expiresAt < new Date()) {
+    if (!sessionData || sessionData.expiresAt < new Date()) {
       return null;
     }
 
-    return session.userId;
+    return sessionData.userId;
   },
 };

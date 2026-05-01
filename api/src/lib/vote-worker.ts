@@ -64,9 +64,9 @@ export const voteWorker = new Worker(
 		});
 
 		for (const user of users) {
-			if (user.whatsappNumber && user.isWhatsappVerified) {
+			if (user.phoneNumber && user.isWhatsappVerified) {
 				await WhatsAppService.sendVoteNotification(
-					user.whatsappNumber,
+					user.phoneNumber,
 					voteData.question,
 					resultText,
 				);
