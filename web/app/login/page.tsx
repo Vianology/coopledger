@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Navbar from '@/components/Navbar';
-import { Ionicons } from '@expo/vector-icons'; // Note: Ionicons is for mobile. I'll use lucide-react for web.
-import { Phone, Lock, ArrowRight } from 'lucide-react';
+import { IconPhone as Phone, IconLock as Lock, IconArrowRight as ArrowRight } from '@tabler/icons-react';
 
 export default function LoginPage() {
   const router = useRouter();

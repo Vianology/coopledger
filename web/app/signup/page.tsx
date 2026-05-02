@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Navbar from '@/components/Navbar';
-import { User, Phone, Lock, Leaf, ArrowRight } from 'lucide-react';
+import { IconUser as User, IconPhone as Phone, IconLock as Lock, IconLeaf as Leaf, IconArrowRight as ArrowRight } from '@tabler/icons-react';
 
 export default function SignupPage() {
   const router = useRouter();

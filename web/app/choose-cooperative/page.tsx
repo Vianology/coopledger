@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Navbar from '@/components/Navbar';
-import { Leaf, Plus, Users } from 'lucide-react';
+import { IconLeaf as Leaf, IconPlus as Plus, IconUsers as Users } from '@tabler/icons-react';
 
 export default function ChooseCooperativePage() {
   const router = useRouter();
@@ -108,7 +108,7 @@ export default function ChooseCooperativePage() {
                       <p className="text-sm text-muted-foreground line-clamp-1">{coop.description || 'Aucune description'}</p>
                     </div>
                   </div>
-                  <Button onClick={() => handleJoin(coop.id)} variant="primary" className="rounded-full px-4">
+                  <Button onClick={() => handleJoin(coop.id)} variant="default" className="rounded-full px-4">
                     Rejoindre
                   </Button>
                 </div>

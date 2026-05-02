@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
-import { Leaf, ShieldCheck, TrendingUp, Users, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { IconLeaf as Leaf, IconShieldCheck as ShieldCheck, IconTrendingUp as TrendingUp, IconUsers as Users, IconArrowRight as ArrowRight, IconCircleCheck as CheckCircle2 } from '@tabler/icons-react';
 
 export default function LandingPage() {
   return (

@@ -4,15 +4,15 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import {
-  TrendingUp,
-  ArrowUpRight,
-  ArrowDownLeft,
-  Leaf,
-  Bell,
-  LogOut,
-  ChevronRight,
-  CreditCard
-} from 'lucide-react';
+  IconTrendingUp as TrendingUp,
+  IconArrowUpRight as ArrowUpRight,
+  IconArrowDownLeft as ArrowDownLeft,
+  IconLeaf as Leaf,
+  IconBell as Bell,
+  IconLogout as LogOut,
+  IconChevronRight as ChevronRight,
+  IconCreditCard as CreditCard
+} from '@tabler/icons-react';
 
 export default function DashboardPage() {
   const [userData, setUserData] = useState<any>(null);
