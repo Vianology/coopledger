@@ -13,7 +13,12 @@ import { user, wallet, transaction, member, cooperative, session } from "@/db/sc
 import { eq, desc } from "drizzle-orm";
 
 const app = express();
-app.use(cors());
+app.use(cors({
+	origin: '*',
+	methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+	preflightContinue: false,
+	optionsSuccessStatus: 204,
+}));
 const server = createServer(app);
 const io = new Server(server);
 const redis = new Redis(process.env.REDIS_URL as string, {
