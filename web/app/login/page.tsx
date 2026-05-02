@@ -29,11 +29,16 @@ export default function LoginPage() {
         }),
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Échec de la connexion');
-
-      localStorage.setItem('auth_token', result.token);
-      router.replace('/dashboard');
+      const text = await response.text();
+      try {
+        const result = JSON.parse(text);
+        if (!response.ok) throw new Error(result.error || 'Échec de la connexion');
+        localStorage.setItem('auth_token', result.token);
+        router.replace('/dashboard');
+      } catch (e) {
+        console.error('Server returned non-JSON response:', text);
+        throw new Error('Le serveur a renvoyé une réponse invalide. Veuillez réessayer plus tard.');
+      }
     } catch (e: any) {
       alert(e.message);
     } finally {

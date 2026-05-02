@@ -32,11 +32,16 @@ export default function SignupPage() {
         }),
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Échec de l\'inscription');
-
-      localStorage.setItem('auth_token', result.token);
-      router.replace('/choose-cooperative');
+      const text = await response.text();
+      try {
+        const result = JSON.parse(text);
+        if (!response.ok) throw new Error(result.error || 'Échec de l\'inscription');
+        localStorage.setItem('auth_token', result.token);
+        router.replace('/choose-cooperative');
+      } catch (e) {
+        console.error('Server returned non-JSON response:', text);
+        throw new Error('Le serveur a renvoyé une réponse invalide.');
+      }
     } catch (e: any) {
       alert(e.message);
     } finally {

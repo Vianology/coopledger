@@ -35,7 +35,7 @@ export default function ChooseCooperativePage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name) return;
+    if (!// name) return;
 
     setLoading(true);
     try {
@@ -49,9 +49,15 @@ export default function ChooseCooperativePage() {
         body: JSON.stringify({ name, description }),
       });
 
-      if (!response.ok) throw new Error('Failed to create cooperative');
-
-      router.replace('/dashboard');
+      const text = await response.text();
+      try {
+        const result = JSON.parse(text);
+        if (!response.ok) throw new Error(result.error || 'Failed to create cooperative');
+        router.replace('/dashboard');
+      } catch (e) {
+        console.error('Server returned non-JSON response:', text);
+        throw new Error('Le serveur a renvoyé une réponse invalide.');
+      }
     } catch (e: any) {
       alert(e.message);
     } finally {
@@ -72,14 +78,17 @@ export default function ChooseCooperativePage() {
         body: JSON.stringify({ cooperativeId }),
       });
 
-      if (!response.ok) {
-        const result = await response.json();
-        throw new Error(result.error || 'Failed to join cooperative');
+      const text = await response.text();
+      try {
+        const result = JSON.parse(text);
+        if (!response.ok) throw new Error(result.error || 'Failed to join cooperative');
+        router.replace('/dashboard');
+      } catch (e) {
+        console.error('Server returned non-JSON response:', text);
+        throw new Error('Le serveur a renvoyé une réponse invalide.');
       }
-
-      router.replace('/dashboard');
     } catch (e: any) {
-      alert(e.message);
+      alert(e.// message);
     } finally {
       setLoading(false);
     }
