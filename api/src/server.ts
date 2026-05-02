@@ -92,10 +92,19 @@ app.post("/api/auth/login", async (req, res) => {
 
 app.get("/api/auth/me", authenticate, async (req: any, res) => {
 	try {
-		const userData = await db.query.user.findFirst({
-			where: eq(user.id, req.userId),
+		const userId = req.userId;
+		const [userData, memberships] = await Promise.all([
+			db.query.user.findFirst({
+				where: eq(user.id, userId),
+			}),
+			db.query.member.findMany({
+				where: eq(member.userId, userId),
+			}),
+		]);
+		res.json({
+			...userData,
+			hasCooperative: memberships.length > 0,
 		});
-		res.json(userData);
 	} catch (e: unknown) {
 		const error = e as Error;
 		res.status(500).json({ error: error.message });
