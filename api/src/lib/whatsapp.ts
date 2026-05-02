@@ -12,6 +12,11 @@ export class WhatsAppService {
 		return `Basic ${credentials}`;
 	}
 
+	private static formatPhoneNumber(phone: string) {
+		const cleaned = phone.replace(/^(\+|00)/, '').replace(/[\s\-()]/g, '');
+		return `${cleaned}@s.whatsapp.net`;
+	}
+
 	static async sendMessage(to: string, message: string, deviceId?: string) {
 		try {
 			const response = await axios.post(
