@@ -8,7 +8,7 @@ import express from "express";
 import { Redis } from "ioredis";
 import morgan from "morgan";
 import { Server } from "socket.io";
-import { auth } from "@/utils/auth";
+import { auth } from "utils/auth";
 
 const app = express();
 const server = createServer(app);

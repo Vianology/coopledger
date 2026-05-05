@@ -8,17 +8,21 @@ datasource db {
 }
 
 model Users {
-  id            String     @id
-  name          String
-  email         String
-  emailVerified Boolean    @default(false)
-  image         String?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  sessions      Sessions[]
-  accounts      Accounts[]
+  id                  String     @id
+  name                String
+  email               String
+  emailVerified       Boolean    @default(false)
+  image               String?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  role                UserRole[] @default([FARMER])
+  publicKey           String?
+  encryptedPrivateKey String?
+  sessions            Sessions[]
+  accounts            Accounts[]
+  transactions        Transactions[]
 
-  @@unique([email])
+  @@unique([email, publicKey])
   @@map("users")
 }
 
@@ -69,3 +73,26 @@ model Verifications {
   @@index([identifier])
   @@map("verifications")
 }
+
+model Transactions {
+  id              String              @id @default(uuid())
+  amount          Float
+  type            String
+  status          TransactionStatus   @default(PENDING)
+  blockchainHash  String?             @unique
+  ipfsCid         String?
+  userId          String
+  user            Users               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime            @default(now())
+  }
+
+enum TransactionStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+}
+
+enum UserRole {
+  FARMER
+}
+
