@@ -13,7 +13,10 @@ const envSchema = z.object({
   BETTER_AUTH_SECRET: z.string(),
   GOOGLE_CLIENT_ID: z.string(),
   GOOGLE_CLIENT_SECRET: z.string(),
-  ENCRYPTION_KEY: z.string().check(z.minLength(12), z.maxLength(64), z.trim()),
+  ENCRYPTION_KEY: z._default(
+    z.string().check(z.minLength(12), z.maxLength(64), z.trim()),
+    "strong-encryption-key",
+  ),
   POLYGON_RPC_URL: z.url(),
   GOWA_API_URL: z.url(),
   GOWA_API_BASIC_AUTH: z.string(),
@@ -23,6 +26,8 @@ const envSchema = z.object({
   CLOUDINARY_API_SECRET: z.string(),
   SYSTEM_PRIVATE_KEY: z.string(),
   FEDAPAY_SECRET_KEY: z.string(),
+  PINATA_API_KEY: z.string(),
+  ALGORITHM: z._default(z.string(), "aes-256-ocb"),
 });
 
 const _env = envSchema.safeParse(process.env);

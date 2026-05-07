@@ -1,7 +1,8 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+import { env } from "config/env";
 
-const ALGORITHM = "aes-256-ocb";
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || "strong-encryption-key";
+const ALGORITHM = env.ALGORITHM;
+const ENCRYPTION_KEY = env.ENCRYPTION_KEY;
 
 export const encrypt = (text: string): string => {
   const iv = randomBytes(16);
@@ -22,3 +23,46 @@ export const decrypt = (text: string): string => {
   decrypted = Buffer.concat([decrypted, decipher.final()]);
   return decrypted.toString();
 };
+
+export function encryptFile(fileData: Express.Multer.File) {
+  const iv = randomBytes(16); // vecteur d'initialisation
+  const cipher = createCipheriv(
+    "aes-256-gcm",
+    Buffer.from(ENCRYPTION_KEY, "hex"),
+    iv,
+  );
+
+  const encrypted = Buffer.concat([
+    cipher.update(fileData.buffer),
+    cipher.final(),
+  ]);
+  const tag = cipher.getAuthTag();
+
+  return {
+    encryptedData: encrypted,
+    iv: iv.toString("hex"),
+    tag: tag.toString("hex"),
+  };
+}
+
+export function decryptFile(
+  encryptedData: Buffer,
+  ivHex: string,
+  tagHex: string,
+) {
+  const iv = Buffer.from(ivHex, "hex");
+  const tag = Buffer.from(tagHex, "hex");
+
+  const decipher = createDecipheriv(
+    "aes-256-gcm",
+    Buffer.from(ENCRYPTION_KEY, "hex"),
+    iv,
+  );
+  decipher.setAuthTag(tag);
+
+  const decrypted = Buffer.concat([
+    decipher.update(encryptedData),
+    decipher.final(),
+  ]);
+  return decrypted;
+}

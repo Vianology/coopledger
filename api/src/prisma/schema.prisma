@@ -8,14 +8,14 @@ datasource db {
 }
 
 model Users {
-  id                    String     @id
+  id                    String        @id
   name                  String
   email                 String
-  emailVerified         Boolean    @default(false)
+  emailVerified         Boolean       @default(false)
   image                 String?
-  createdAt             DateTime   @default(now())
-  updatedAt             DateTime   @updatedAt
-  role                  UserRole   @default(FARMER)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  role                  UserRole      @default(USER)
   publicKey             String?
   encryptedPrivateKey   String?
   sessions              Sessions[]
@@ -89,22 +89,50 @@ model Transactions {
 }
 
 model Cooperatives {
-  id      String          @id @default(uuid())
-  name    String
-  adminId String
-  admin   Users           @relation(fields: [adminId], references: [id], onDelete: Cascade)
-  members Memberships[]
+  id                            String             @id @default(uuid())
+  name                          String
+  creatorId                     String
+  description                   String
+  logo                          String
+  founders                      String[]
+  statusDocumentIpfsCid         String
+  proofDocumentIpfsCid          String
+  identityDocumentIpfsCid       String
+  businessPlanDocumentIpfsCid   String?
+  statusDocument                EncryptedDocument   @relation("StatusDocument", fields: [statusDocumentIpfsCid], references: [ipfsCid], onDelete: Cascade)
+  proofDocument                 EncryptedDocument   @relation("ProofDocument", fields: [proofDocumentIpfsCid], references: [ipfsCid], onDelete: Cascade)
+  identityDocument              EncryptedDocument   @relation("IdentityDocument", fields: [identityDocumentIpfsCid], references: [ipfsCid], onDelete: Cascade)
+  businessPlanDocument          EncryptedDocument?  @relation("BusinessPlanDocument", fields: [businessPlanDocumentIpfsCid], references: [ipfsCid], onDelete: Cascade)
+  creator                       Users               @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  members                       Memberships[]
+  createdAt                     DateTime            @default(now())
+  updatedAt                     DateTime            @updatedAt
 }
 
 model Memberships {
   userId        String
   cooperativeId String
   status        MembershipStatus  @default(PENDING)
-  role          MembershipRole    @default(MEMBER)
+  grade         MembershipGrade   @default(MEMBER)
+  role          MembershipRole    @default(FARMER)
   user          Users             @relation(fields: [userId], references: [id], onDelete: Cascade) 
   cooperative   Cooperatives      @relation(fields: [cooperativeId], references: [id], onDelete: Cascade)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
   @@id([userId, cooperativeId])
+}
+
+model EncryptedDocument {
+  ipfsCid                 String         @id
+  iv                      String
+  tag                     String
+
+  statusDocumentOf        Cooperatives[] @relation("StatusDocument")
+  proofDocumentOf         Cooperatives[] @relation("ProofDocument")
+  identityDocumentOf      Cooperatives[] @relation("IdentityDocument")
+  businessPlanDocumentOf  Cooperatives[] @relation("BusinessPlanDocument")
+  createdAt               DateTime       @default(now())
 }
 
 enum MembershipStatus {
@@ -120,11 +148,18 @@ enum TransactionStatus {
 }
 
 enum UserRole {
-  FARMER
+  USER
+  ADMIN
+}
+
+enum MembershipGrade {
+  ADMIN
+  TREASURER
+  MEMBER
 }
 
 enum MembershipRole {
-  ADMIN
-  MEMBER
+  FARMER
+  SELLER
 }
 
