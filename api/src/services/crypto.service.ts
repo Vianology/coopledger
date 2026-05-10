@@ -24,18 +24,17 @@ export const decrypt = (text: string): string => {
   return decrypted.toString();
 };
 
-export function encryptFile(fileData: Express.Multer.File) {
-  const iv = randomBytes(16); // vecteur d'initialisation
-  const cipher = createCipheriv(
-    "aes-256-gcm",
-    Buffer.from(ENCRYPTION_KEY, "hex"),
-    iv,
-  );
+/**
+ * Chiffre des données (Buffer ou String) avec une clé spécifique.
+ * Utilisé pour les documents de coopérative et les reçus.
+ */
+export function encryptWithKey(data: Buffer | string, hexKey: string) {
+  const iv = randomBytes(16);
+  const key = Buffer.from(hexKey, "hex");
+  const cipher = createCipheriv("aes-256-gcm", key, iv);
 
-  const encrypted = Buffer.concat([
-    cipher.update(fileData.buffer),
-    cipher.final(),
-  ]);
+  const buffer = Buffer.isBuffer(data) ? data : Buffer.from(data);
+  const encrypted = Buffer.concat([cipher.update(buffer), cipher.final()]);
   const tag = cipher.getAuthTag();
 
   return {
@@ -45,19 +44,20 @@ export function encryptFile(fileData: Express.Multer.File) {
   };
 }
 
-export function decryptFile(
+/**
+ * Déchiffre des données avec une clé spécifique.
+ */
+export function decryptWithKey(
   encryptedData: Buffer,
+  hexKey: string,
   ivHex: string,
   tagHex: string,
 ) {
   const iv = Buffer.from(ivHex, "hex");
   const tag = Buffer.from(tagHex, "hex");
+  const key = Buffer.from(hexKey, "hex");
 
-  const decipher = createDecipheriv(
-    "aes-256-gcm",
-    Buffer.from(ENCRYPTION_KEY, "hex"),
-    iv,
-  );
+  const decipher = createDecipheriv("aes-256-gcm", key, iv);
   decipher.setAuthTag(tag);
 
   const decrypted = Buffer.concat([
@@ -65,4 +65,23 @@ export function decryptFile(
     decipher.final(),
   ]);
   return decrypted;
+}
+
+/**
+ * Génère une nouvelle clé AES-256.
+ */
+export function generateCoopKey(): string {
+  return randomBytes(32).toString("hex");
+}
+
+export function encryptFile(fileData: Express.Multer.File) {
+  return encryptWithKey(fileData.buffer, ENCRYPTION_KEY);
+}
+
+export function decryptFile(
+  encryptedData: Buffer,
+  ivHex: string,
+  tagHex: string,
+) {
+  return decryptWithKey(encryptedData, ENCRYPTION_KEY, ivHex, tagHex);
 }

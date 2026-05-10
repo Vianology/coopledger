@@ -1,11 +1,11 @@
 import { MembershipGrade, MembershipRole, MembershipStatus } from "db/enums";
 import type { Request, Response } from "express";
 import { cloudinary, pinata } from "server";
-import { encryptFile } from "services/crypto.service";
+import { encrypt, encryptFile, generateCoopKey } from "services/crypto.service";
 import { prisma } from "utils/prisma";
 
 export async function createCooperative(req: Request, res: Response) {
-  const { name, description, founders } = req.body;
+  const { name, description, founders, latitude, longitude } = req.body;
 
   if (!req.files) {
     return res.status(400).json({ message: "Missing required files" });
@@ -31,6 +31,10 @@ export async function createCooperative(req: Request, res: Response) {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
+  // Génération de la clé de la coopérative
+  const coopKey = generateCoopKey();
+  const encryptedCoopKey = encrypt(coopKey);
+
   const encryptedStatusDocument = encryptFile(statusDocument);
   const encryptedProofDocument = encryptFile(proofDocument);
   const encryptedIdentityDocument = encryptFile(identityDocument);
@@ -39,7 +43,6 @@ export async function createCooperative(req: Request, res: Response) {
     : null;
 
   try {
-    // Atomic upload
     const [
       statusDocumentUrl,
       proofDocumentUrl,
@@ -74,7 +77,7 @@ export async function createCooperative(req: Request, res: Response) {
         : null,
     ]);
 
-    await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       const statusDocumentObject = await tx.encryptedDocument.create({
         data: {
           ipfsCid: statusDocumentUrl.cid,
@@ -101,7 +104,7 @@ export async function createCooperative(req: Request, res: Response) {
 
       const businessPlanDocumentObject =
         businessPlanDocumentUrl && encryptedBusinessPlanDocument
-          ? await prisma.encryptedDocument.create({
+          ? await tx.encryptedDocument.create({
               data: {
                 ipfsCid: businessPlanDocumentUrl.cid,
                 iv: encryptedBusinessPlanDocument.iv,
@@ -125,6 +128,9 @@ export async function createCooperative(req: Request, res: Response) {
           description: description as string,
           logo: logo.filename,
           founders: founders as string[],
+          latitude: latitude ? Number(latitude) : null,
+          longitude: longitude ? Number(longitude) : null,
+          encryptionKey: encryptedCoopKey,
           creatorId: req.session.user.id,
           statusDocumentIpfsCid: statusDocumentObject.ipfsCid,
           proofDocumentIpfsCid: proofDocumentObject.ipfsCid,
@@ -133,14 +139,56 @@ export async function createCooperative(req: Request, res: Response) {
         },
       });
 
-      res.status(201).json(createdCooperative);
+      // Le créateur devient Admin membre automatiquement
+      await tx.memberships.create({
+        data: {
+          userId: req.session.user.id,
+          cooperativeId: createdCooperative.id,
+          status: MembershipStatus.ACCEPTED,
+          grade: MembershipGrade.ADMIN,
+          role: MembershipRole.FARMER,
+        },
+      });
+
+      return createdCooperative;
     });
+
+    res.status(201).json(result);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "An error occured" });
   }
 
   return res.end();
+}
+
+export async function getCooperatives(req: Request, res: Response) {
+  const { lat, lng, radius = 15 } = req.query;
+
+  try {
+    const cooperatives = await prisma.cooperatives.findMany();
+
+    if (lat && lng) {
+      const userLat = Number(lat);
+      const userLng = Number(lng);
+      const rad = Number(radius);
+
+      // Filtrage spatial simple (Haversine serait mieux pour la production)
+      const filtered = cooperatives.filter((coop) => {
+        if (!coop.latitude || !coop.longitude) return false;
+        const dist = Math.sqrt(
+          (coop.latitude - userLat) ** 2 + (coop.longitude - userLng) ** 2,
+        );
+        // Approximation: 1 degré ~= 111km
+        return dist * 111 <= rad;
+      });
+      return res.status(200).json(filtered);
+    }
+
+    res.status(200).json(cooperatives);
+  } catch (error) {
+    res.status(500).json({ message: "Erreur lors de la récupération" });
+  }
 }
 
 export async function joinCooperative(req: Request, res: Response) {

@@ -1,0 +1,155 @@
+openapi: 3.0.3
+info:
+  title: CoopLedger API
+  description: API pour la gestion des coopératives agricoles (Hackathon TG-28)
+  version: 0.0.0
+servers:
+  - url: /api
+paths:
+  /auth/{any}:
+    all:
+      summary: Points d'entrée pour l'authentification (Better-Auth)
+      parameters:
+        - name: any
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /cooperatives/create:
+    post:
+      summary: Créer une nouvelle coopérative
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                founders:
+                  type: array
+                  items:
+                    type: string
+                logo:
+                  type: string
+                  format: binary
+                status_document:
+                  type: string
+                  format: binary
+                proof_document:
+                  type: string
+                  format: binary
+                identity_document:
+                  type: string
+                  format: binary
+                business_plan_document:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Coopérative créée
+        '400':
+          description: Champs manquants
+  /cooperatives/join:
+    post:
+      summary: Demander à rejoindre une coopérative
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cooperativeId:
+                  type: string
+      responses:
+        '201':
+          description: Demande d'adhésion créée
+  /cooperatives/join/approve:
+    post:
+      summary: Approuver ou rejeter une demande d'adhésion
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cooperativeId:
+                  type: string
+                memberId:
+                  type: string
+                isApproved:
+                  type: boolean
+      responses:
+        '200':
+          description: Statut mis à jour
+  /votes/propose:
+    post:
+      summary: Proposer un nouveau vote
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subject:
+                  type: string
+                proposals:
+                  type: array
+                  items:
+                    type: string
+                endDate:
+                  type: string
+                  format: date-time
+      responses:
+        '201':
+          description: Proposition créée
+  /votes/cast:
+    post:
+      summary: Voter pour une proposition
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                voteId:
+                  type: string
+                userId:
+                  type: string
+      responses:
+        '201':
+          description: Vote enregistré
+  /payments/membership-fee:
+    post:
+      summary: Initier le paiement d'une cotisation (MVP simple)
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Transaction FedaPay créée
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: better-auth.session-token

@@ -16,6 +16,7 @@ model Users {
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
   role                  UserRole      @default(USER)
+  lastActiveAt          DateTime      @default(now())
   publicKey             String?
   encryptedPrivateKey   String?
   votes                 Votes[]
@@ -26,7 +27,7 @@ model Users {
   memberships           Memberships[]
   cooperativesCreated   Cooperatives[]
 
-  @@unique([email, publicKey])
+  @@unique([email])
   @@map("users")
 }
 
@@ -81,12 +82,17 @@ model Verifications {
 model Transactions {
   id              String              @id @default(uuid())
   amount          Float
-  type            String
+  type            TransactionType
   status          TransactionStatus   @default(PENDING)
   blockchainHash  String?             @unique
   ipfsCid         String?
+  receiptHash     String?
   userId          String
   user            Users               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cooperativeId   String
+  cooperative     Cooperatives        @relation(fields: [cooperativeId], references: [id], onDelete: Cascade)
+  voteId          String?
+  vote            Votes?              @relation(fields: [voteId], references: [id])
   createdAt       DateTime            @default(now())
 }
 
@@ -97,6 +103,18 @@ model Cooperatives {
   description                   String
   logo                          String
   founders                      String[]
+
+  latitude                      Float?
+  longitude                     Float?
+
+  publicKey                     String?
+  encryptedPrivateKey           String?
+  encryptionKey                 String?            // Clé AES de la coopérative (chiffrée avec ENCRYPTION_KEY du serveur)
+
+  fedapayApiKeyPublic           String?
+  fedapayApiKeySecret           String?
+  payoutEnabled                 Boolean            @default(false)
+
   statusDocumentIpfsCid         String
   proofDocumentIpfsCid          String
   identityDocumentIpfsCid       String
@@ -107,6 +125,9 @@ model Cooperatives {
   businessPlanDocument          EncryptedDocument?  @relation("BusinessPlanDocument", fields: [businessPlanDocumentIpfsCid], references: [ipfsCid], onDelete: Cascade)
   creator                       Users               @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   members                       Memberships[]
+  votes                         Votes[]
+  transactions                  Transactions[]
+  recurringFees                 RecurringFees[]
   createdAt                     DateTime            @default(now())
   updatedAt                     DateTime            @updatedAt
 }
@@ -117,12 +138,24 @@ model Memberships {
   status        MembershipStatus  @default(PENDING)
   grade         MembershipGrade   @default(MEMBER)
   role          MembershipRole    @default(FARMER)
+  lastActiveAt  DateTime          @default(now())
   user          Users             @relation(fields: [userId], references: [id], onDelete: Cascade) 
   cooperative   Cooperatives      @relation(fields: [cooperativeId], references: [id], onDelete: Cascade)
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 
   @@id([userId, cooperativeId])
+}
+
+model RecurringFees {
+  id              String          @id @default(uuid())
+  cooperativeId   String
+  cooperative     Cooperatives    @relation(fields: [cooperativeId], references: [id], onDelete: Cascade)
+  amount          Float
+  frequency       FeeFrequency    @default(MONTHLY)
+  description     String
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 }
 
 model EncryptedDocument {
@@ -139,14 +172,25 @@ model EncryptedDocument {
 
 model Votes {
   id                      String         @id @default(uuid())
+  cooperativeId           String
+  cooperative             Cooperatives   @relation(fields: [cooperativeId], references: [id], onDelete: Cascade)
+  type                    VoteType       @default(VOTE_GENERAL)
+  status                  VoteStatus     @default(OPEN)
   subject                 String
+  description             String?
   proposals               String[]
+  amount                  Float?         // Pour COTISATION ou RETRAIT
+  beneficiary             String?        // Pour RETRAIT (numéro mobile)
   endDate                 DateTime
+  paymentDeadline         DateTime?      // Pour COTISATION
+  totalEligibleVoters     Int            @default(0)
   creatorId               String
   creator                 Users          @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   createdAt               DateTime       @default(now())
+  updatedAt               DateTime       @updatedAt
 
   VoteCasts               VoteCasts[]
+  transactions            Transactions[]
 }
 
 model VoteCasts {
@@ -167,7 +211,31 @@ enum MembershipStatus {
 enum TransactionStatus {
   PENDING
   CONFIRMED
+  FAILED
+}
+
+enum TransactionType {
+  COTISATION
+  RETRAIT
+}
+
+enum VoteStatus {
+  OPEN
+  APPROVED
   REJECTED
+  EXPIRED
+}
+
+enum VoteType {
+  VOTE_GENERAL
+  COTISATION
+  RETRAIT
+  CANDIDATURE_BUREAU
+}
+
+enum FeeFrequency {
+  MONTHLY
+  YEARLY
 }
 
 enum UserRole {

@@ -21,6 +21,7 @@ cooperativesRoutes.post(
   isAuthenticated,
   createCooperative,
 );
+cooperativesRoutes.get("/", isAuthenticated, getCooperatives);
 cooperativesRoutes.post("/join", isAuthenticated, joinCooperative);
 cooperativesRoutes.post(
   "/join/approve",

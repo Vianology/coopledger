@@ -1,10 +1,13 @@
-import { membershipFee } from "controllers/payments.controller";
+import {
+  initiatePayment,
+  paymentCallback,
+} from "controllers/payments.controller";
 import { Router } from "express";
 import { isAuthenticated } from "middlewares/auth.middleware";
 
 const paymentsRoutes = Router();
 
-paymentsRoutes.post("/membership-fee", isAuthenticated, membershipFee);
-paymentsRoutes.post("/membership-fee/callback", isAuthenticated);
+paymentsRoutes.post("/initiate", isAuthenticated, initiatePayment);
+paymentsRoutes.post("/callback", paymentCallback);
 
 export { paymentsRoutes };
