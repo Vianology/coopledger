@@ -22,7 +22,7 @@ FedaPay.setApiKey(env.FEDAPAY_SECRET_KEY);
 FedaPay.setEnvironment("sandbox");
 
 const pinata = new PinataSDK({
-  pinataJwt: env.PINATA_API_KEY,
+  pinataJwt: env.PINATA_JWT,
 });
 
 cloudinary.config({
