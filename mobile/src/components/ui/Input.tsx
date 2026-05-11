@@ -11,6 +11,7 @@ interface InputProps {
   error?: string;
   icon?: React.ReactNode;
   prefix?: string;
+  multiline?: boolean;
 }
 
 export const Input = ({
@@ -23,6 +24,7 @@ export const Input = ({
   error,
   icon,
   prefix,
+  multiline,
 }: InputProps) => {
   return (
     <View style={styles.container}>
@@ -37,13 +39,14 @@ export const Input = ({
           </View>
         )}
         <TextInput
-          style={styles.input}
+          style={[styles.input, multiline ? { height: 100, textAlignVertical: "top" } : null]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
           secureTextEntry={secureTextEntry}
           keyboardType={keyboardType}
           placeholderTextColor="#bdc9c1"
+          multiline={multiline}
         />
       </View>
       {error && <Text style={styles.errorText}>{error}</Text>}
@@ -61,7 +64,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     fontWeight: "500",
     fontFamily: "GoogleSansText-Medium",
-    tracking: 0.24,
   },
   inputWrapper: {
     flexDirection: "row",

@@ -28,7 +28,7 @@ export default function LoginScreen() {
         password,
       });
 
-      if (result.user) {
+      if (result.data?.user) {
         router.replace("/");
       }
     } catch (e: any) {

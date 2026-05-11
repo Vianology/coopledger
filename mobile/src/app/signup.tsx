@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Alert, Image } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Alert, Image, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { Button } from "@/components/ui/Button";
@@ -7,51 +7,73 @@ import { Input } from "@/components/ui/Input";
 import { Ionicons } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
 import { authClient } from "@/utils/auth-client";
+import { env } from "@/config/env";
 
 WebBrowser.maybeCompleteAuthSession();
+
+type Role = "FARMER" | "SELLER" | "FINANCIAL_INSTITUTION";
 
 export default function SignupScreen() {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [cooperative, setCooperative] = useState("");
+  const [role, setRole] = useState<Role>("FARMER");
   const [loading, setLoading] = useState(false);
 
   const handleSignup = async () => {
-    if (!fullName || !phone || !password) {
-      Alert.alert("Erreur", "Veuillez remplir tous les champs");
+    if (!fullName || !phone || !password || (role !== "FARMER" && !email)) {
+      Alert.alert("Erreur", "Veuillez remplir tous les champs obligatoires");
       return;
     }
 
     setLoading(true);
     try {
-      const result = await authClient.signUp.email({
-        name: fullName,
-        email: `${phone}@coopledger.tg`,
-        phoneNumber: phone,
-        password,
-      });
+      if (role === "FARMER") {
+        // Flux OTP WhatsApp pour les agriculteurs
+        const response = await fetch(`${env.API_BASE_URL}/api/auth/whatsapp/send-code`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: `+228${phone}` }),
+        });
 
-      SecureStore.setItem("user_id", result.user.id);
-      SecureStore.setItem("phone_number", phone);
+        if (!response.ok) {
+           const data = await response.json();
+           throw new Error(data.message || "Échec de l'envoi du code");
+        }
 
-      router.push({
-        pathname: "/choose-cooperative",
-      });
+        await SecureStore.setItemAsync("signup_name", fullName);
+        await SecureStore.setItemAsync("signup_phone", phone);
+        await SecureStore.setItemAsync("signup_password", password);
+        await SecureStore.setItemAsync("signup_role", role);
+
+        router.push("/verify-whatsapp");
+      } else {
+        // Flux classique pour les autres
+        const result = await authClient.signUp.email({
+          name: fullName,
+          email: email,
+          password,
+          fetchOptions: {
+            body: {
+              data: {
+                role: role,
+                phoneNumber: `+228${phone}`,
+              }
+            }
+          }
+        });
+
+        if (result.data?.user) {
+            router.replace("/choose-cooperative");
+        }
+      }
     } catch (e: any) {
       Alert.alert("Échec de l'inscription", e.message);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleGoogleSignup = async () => {
-    // Google auth removed as per requirements
-    Alert.alert(
-      "Info",
-      "L'authentification Google est temporairement désactivée",
-    );
   };
 
   return (
@@ -69,6 +91,30 @@ export default function SignupScreen() {
         </Text>
       </View>
 
+      <View style={styles.roleSelector}>
+        <TouchableOpacity
+          style={[styles.roleButton, role === "FARMER" && styles.roleButtonActive]}
+          onPress={() => setRole("FARMER")}
+        >
+          <Ionicons name="leaf-outline" size={20} color={role === "FARMER" ? "#fff" : "#2d936c"} />
+          <Text style={[styles.roleText, role === "FARMER" && styles.roleTextActive]}>Agriculteur</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.roleButton, role === "SELLER" && styles.roleButtonActive]}
+          onPress={() => setRole("SELLER")}
+        >
+          <Ionicons name="cart-outline" size={20} color={role === "SELLER" ? "#fff" : "#2d936c"} />
+          <Text style={[styles.roleText, role === "SELLER" && styles.roleTextActive]}>Vendeur</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.roleButton, role === "FINANCIAL_INSTITUTION" && styles.roleButtonActive]}
+          onPress={() => setRole("FINANCIAL_INSTITUTION")}
+        >
+          <Ionicons name="business-outline" size={20} color={role === "FINANCIAL_INSTITUTION" ? "#fff" : "#2d936c"} />
+          <Text style={[styles.roleText, role === "FINANCIAL_INSTITUTION" && styles.roleTextActive]}>Institution</Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.card}>
         <Input
           label="Nom complet"
@@ -77,6 +123,18 @@ export default function SignupScreen() {
           placeholder="Entrez votre nom et prénom"
           icon={<Ionicons name="person-outline" size={20} color="#666" />}
         />
+
+        {role !== "FARMER" && (
+            <Input
+                label="Adresse Email"
+                value={email}
+                onChangeText={setEmail}
+                placeholder="exemple@mail.com"
+                icon={<Ionicons name="mail-outline" size={20} color="#666" />}
+                keyboardType="email-address"
+            />
+        )}
+
         <Input
           label="Numéro de téléphone"
           value={phone}
@@ -96,28 +154,15 @@ export default function SignupScreen() {
         />
 
         <Button
-          title="S'inscrire"
+          title={role === "FARMER" ? "Suivant (Vérification)" : "S'inscrire"}
           onPress={handleSignup}
           loading={loading}
           variant="primary"
         />
-
-        <View style={styles.divider}>
-          <View style={styles.line} />
-          <Text style={styles.dividerText}>OU</Text>
-          <View style={styles.line} />
-        </View>
-
-        <Button
-          title="Continuer avec Google"
-          onPress={handleGoogleSignup}
-          variant="tertiary"
-          style={styles.googleButton}
-        />
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>DÃ©jÃ  inscrit ? </Text>
+        <Text style={styles.footerText}>Déjà inscrit ? </Text>
         <Text style={styles.link} onPress={() => router.push("/login")}>
           Se connecter
         </Text>
@@ -135,7 +180,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: "center",
-    marginBottom: 32,
+    marginBottom: 24,
     marginTop: 40,
   },
   logo: {
@@ -144,7 +189,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     color: "#1a1c1c",
     fontFamily: "GoogleSansText-Bold",
     textAlign: "center",
@@ -157,35 +202,45 @@ const styles = StyleSheet.create({
     fontFamily: "GoogleSansText-Regular",
     paddingHorizontal: 20,
   },
+  roleSelector: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 24,
+    gap: 8,
+  },
+  roleButton: {
+    flex: 1,
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    borderRadius: 16,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#2d936c",
+    gap: 4,
+  },
+  roleButtonActive: {
+    backgroundColor: "#2d936c",
+  },
+  roleText: {
+    fontSize: 10,
+    color: "#2d936c",
+    fontFamily: "GoogleSansText-Medium",
+  },
+  roleTextActive: {
+    color: "#fff",
+  },
   card: {
     backgroundColor: "#fff",
     padding: 24,
     borderRadius: 32,
     width: "100%",
-    boxShadow: "0px 1px 1px rgba(0, 0, 0, 0.05)",
     elevation: 2,
-  },
-  divider: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 24,
-  },
-  line: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#ccc",
-  },
-  dividerText: {
-    marginHorizontal: 12,
-    color: "#3e4943",
-    fontSize: 12,
-    fontFamily: "GoogleSansText-Regular",
-    textTransform: "uppercase",
-  },
-  googleButton: {
-    backgroundColor: "#fff",
-    borderColor: "#ccc",
-    borderWidth: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 1,
   },
   footer: {
     flexDirection: "row",

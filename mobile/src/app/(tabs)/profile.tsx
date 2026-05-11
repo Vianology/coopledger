@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'rea
 import { Button } from '@/components/ui/Button';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { authClient } from '@/lib/auth-client';
+import { authClient } from '@/utils/auth-client';
 
 export default function ProfileScreen() {
   const router = useRouter();

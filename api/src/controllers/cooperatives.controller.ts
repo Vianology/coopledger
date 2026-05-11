@@ -17,7 +17,7 @@ export async function createCooperative(req: Request, res: Response) {
 
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
-  const logo = files?.logo[0];
+  const logo = files?.logo ? files?.logo[0] : null;
   const statusDocument = files?.status_document[0];
   const proofDocument = files?.proof_document[0];
   const identityDocument = files?.identity_document[0];
@@ -26,7 +26,6 @@ export async function createCooperative(req: Request, res: Response) {
   if (
     !name ||
     !description ||
-    !logo ||
     !founders ||
     !statusDocument ||
     !proofDocument ||
@@ -117,20 +116,24 @@ export async function createCooperative(req: Request, res: Response) {
             })
           : null;
 
-      await new Promise((resolve, reject) => {
-        cloudinary.uploader
-          .upload_stream(
-            { folder: "cooperatives", public_id: logo.originalname },
-            (error, result) => (error ? reject(error) : resolve(result)),
-          )
-          .end(logo.buffer);
-      });
+      let logoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name as string)}&background=random&color=fff&size=128`;
+      if (logo) {
+        const uploadResult: any = await new Promise((resolve, reject) => {
+          cloudinary.uploader
+            .upload_stream(
+              { folder: "cooperatives", public_id: logo.originalname },
+              (error, result) => (error ? reject(error) : resolve(result)),
+            )
+            .end(logo.buffer);
+        });
+        logoUrl = uploadResult.secure_url;
+      }
 
       const createdCooperative = await tx.cooperatives.create({
         data: {
           name: name as string,
           description: description as string,
-          logo: logo.filename,
+          logo: logoUrl,
           founders: founders as string[],
           latitude: latitude ? Number(latitude) : null,
           longitude: longitude ? Number(longitude) : null,

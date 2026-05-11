@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { Button } from '@/components/ui/Button';
 import { Ionicons } from '@expo/vector-icons';
-import { authClient } from '@/lib/auth-client';
+import { authClient, getAuthToken } from '@/utils/auth-client';
+import { env } from '@/config/env';
 
 export default function HomeScreen() {
   const [userData, setUserData] = useState<any>(null);
@@ -13,13 +14,12 @@ export default function HomeScreen() {
     async function loadData() {
       try {
         const session = await authClient.getSession();
-        const token = await authClient.getToken();
 
         if (session.data) {
-          setUserData(session.data);
+          setUserData(session.data.user);
 
-          const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/api/user/dashboard`, {
-            headers: { 'Authorization': `Bearer ${token}` },
+          const response = await fetch(`${env.API_BASE_URL}/api/user/dashboard`, {
+            headers: { 'Authorization': `Bearer ${await getAuthToken()}` },
           });
           const data = await response.json();
           setDashboardData(data);

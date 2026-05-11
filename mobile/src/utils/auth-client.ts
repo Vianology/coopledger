@@ -12,4 +12,23 @@ export const authClient = createAuthClient({
       storage: SecureStore,
     }),
   ],
+  user: {
+    additionalFields: {
+      phoneNumber: {
+        type: "string",
+      },
+    },
+  },
 });
+
+export const getAuthToken = async () => {
+  const session = await authClient.getSession();
+  return session.data?.session.token;
+};
+
+export const getAuthHeaders = async () => {
+  const token = await getAuthToken();
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+};

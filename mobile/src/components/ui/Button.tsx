@@ -21,9 +21,35 @@ export const Button = ({
   variant = "primary",
   style,
 }: ButtonProps) => {
+  const getTextStyle = () => {
+    switch (variant) {
+      case "primary":
+        return styles.textPrimary;
+      case "secondary":
+        return styles.textSecondary;
+      case "tertiary":
+        return styles.textTertiary;
+      default:
+        return styles.textPrimary;
+    }
+  };
+
+  const getVariantStyle = () => {
+    switch (variant) {
+      case "primary":
+        return styles.primary;
+      case "secondary":
+        return styles.secondary;
+      case "tertiary":
+        return styles.tertiary;
+      default:
+        return styles.primary;
+    }
+  };
+
   return (
     <TouchableOpacity
-      style={[styles.button, styles[variant], style]}
+      style={[styles.button, getVariantStyle(), style]}
       onPress={onPress}
       disabled={loading}
     >
@@ -32,12 +58,7 @@ export const Button = ({
           color={variant === "tertiary" ? "#2d936c" : "#fff"}
         />
       ) : (
-        <Text
-          style={[
-            styles.text,
-            styles[`text${variant.charAt(0).toUpperCase() + variant.slice(1)}`],
-          ]}
-        >
+        <Text style={[styles.text, getTextStyle()]}>
           {title}
         </Text>
       )}

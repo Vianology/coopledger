@@ -30,6 +30,11 @@ export const auth = betterAuth({
         input: true,
         required: true,
       },
+      role: {
+        type: "string",
+        input: true,
+        required: true,
+      },
     },
   },
   trustedOrigins: ["coopledger://"],

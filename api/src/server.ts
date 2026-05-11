@@ -12,7 +12,9 @@ import morgan from "morgan";
 import multer, { memoryStorage } from "multer";
 import { PinataSDK } from "pinata";
 import { cooperativesRoutes } from "@/routes/cooperatives.route";
+import { otpRoutes } from "@/routes/otp.route";
 import { paymentsRoutes } from "@/routes/payments.route";
+import { userRoutes } from "@/routes/user.route";
 import { Server } from "socket.io";
 import { auth } from "@/utils/auth";
 
@@ -47,9 +49,11 @@ app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use("/api/auth/whatsapp", otpRoutes);
 app.all("/api/auth/{*any}", toNodeHandler(auth));
 app.use("/api/payments", paymentsRoutes);
 app.use("/api/cooperatives", cooperativesRoutes);
+app.use("/api/user", userRoutes);
 
 io.on("connection", (_) => {
   console.log("A user connected");

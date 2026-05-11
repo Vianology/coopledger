@@ -41,9 +41,7 @@ export default function RootLayout() {
         // if (!user.isWhatsappVerified) {
         //   router.replace("/verify-whatsapp");
         // } else
-        if (!user.hasCooperative) {
-          router.replace("/choose-cooperative");
-        } else if (!inAuthGroup) {
+        if (!inAuthGroup) {
           router.replace("/(tabs)");
         }
       }

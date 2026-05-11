@@ -1,36 +1,43 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, Alert, ScrollView, TouchableOpacity } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter } from "expo-router";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Ionicons } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
+import { authClient } from "@/utils/auth-client";
+import { env } from "@/config/env";
 
 export default function VerifyWhatsAppScreen() {
   const router = useRouter();
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
-  const [userId] = useState(SecureStore.getItem("user_id"));
-  const [phoneNumber] = useState(SecureStore.getItem("phone_number"));
+  const [phone, setPhone] = useState("");
 
   useEffect(() => {
-    if (userId && phoneNumber) {
-      sendCode();
-    }
+    loadPhone();
   }, []);
+
+  const loadPhone = async () => {
+      const p = await SecureStore.getItemAsync("signup_phone");
+      if (p) setPhone(p);
+  };
 
   const sendCode = async () => {
     try {
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/auth/whatsapp/send-code`,
+        `${env.API_BASE_URL}/api/auth/whatsapp/send-code`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, phoneNumber: `228${phoneNumber}` }),
+          body: JSON.stringify({ phone: `+228${phone}` }),
         },
       );
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to send code");
+      if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.message || "Failed to send code");
+      }
+      Alert.alert("Succès", "Code renvoyé !");
     } catch (e: any) {
       Alert.alert("Erreur", e.message);
     }
@@ -44,19 +51,47 @@ export default function VerifyWhatsAppScreen() {
 
     setLoading(true);
     try {
+      // 1. Vérifier l'OTP
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/auth/whatsapp/verify`,
+        `${env.API_BASE_URL}/api/auth/whatsapp/verify`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, code }),
+          body: JSON.stringify({ phone: `+228${phone}`, code }),
         },
       );
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Verification failed");
+      if (!response.ok || !data.success) throw new Error(data.message || "Verification failed");
 
-      Alert.alert("Succès", "Votre compte a été vérifié avec succès !");
-      router.replace("/choose-cooperative");
+      // 2. Procéder à l'inscription réelle (email fictif)
+      const name = await SecureStore.getItemAsync("signup_name");
+      const password = await SecureStore.getItemAsync("signup_password");
+      const role = await SecureStore.getItemAsync("signup_role");
+
+      const result = await authClient.signUp.email({
+        name: name!,
+        email: `${phone}@coopledger.tg`,
+        password: password!,
+        fetchOptions: {
+          body: {
+            data: {
+              role: role,
+              phoneNumber: `+228${phone}`,
+            }
+          }
+        }
+      });
+
+      if (result.data?.user) {
+          // Nettoyage
+          await SecureStore.deleteItemAsync("signup_name");
+          await SecureStore.deleteItemAsync("signup_phone");
+          await SecureStore.deleteItemAsync("signup_password");
+          await SecureStore.deleteItemAsync("signup_role");
+
+          Alert.alert("Succès", "Votre compte a été créé et vérifié !");
+          router.replace("/choose-cooperative");
+      }
     } catch (e: any) {
       Alert.alert("Erreur", e.message);
     } finally {
@@ -68,12 +103,12 @@ export default function VerifyWhatsAppScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
         <View style={styles.iconCircle}>
-          <Ionicons name="checkmark-circle-outline" size={64} color="#2d936c" />
+          <Ionicons name="logo-whatsapp" size={64} color="#25D366" />
         </View>
-        <Text style={styles.title}>Vérification</Text>
+        <Text style={styles.title}>Vérification WhatsApp</Text>
         <Text style={styles.subtitle}>
-          Nous avons envoyé un code de vérification à{"\n"}
-          <Text style={styles.phone}>{phoneNumber}</Text>
+          Nous avons envoyé un code de vérification au{"\n"}
+          <Text style={styles.phone}>+228 {phone}</Text>
         </Text>
       </View>
 
@@ -82,13 +117,13 @@ export default function VerifyWhatsAppScreen() {
           label="Code de vérification"
           value={code}
           onChangeText={setCode}
-          placeholder="Entrez le code à 6 chiffres"
+          placeholder="123456"
           keyboardType="number-pad"
           icon={<Ionicons name="key-outline" size={20} color="#666" />}
         />
 
         <Button
-          title="Vérifier et continuer"
+          title="Vérifier et S'inscrire"
           onPress={handleVerify}
           loading={loading}
           variant="primary"
@@ -127,11 +162,14 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     borderWidth: 1,
     borderColor: "#eee",
-    boxShadow: "0px 2px 3px rgba(0, 0, 0, 0.05)",
     elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     color: "#1a1c1c",
     fontFamily: "GoogleSansText-Bold",
     textAlign: "center",
@@ -155,8 +193,11 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     borderWidth: 1,
     borderColor: "#eee",
-    boxShadow: "0px 1px 1px rgba(0, 0, 0, 0.05)",
     elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 1,
   },
   divider: {
     marginTop: 24,
