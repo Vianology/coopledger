@@ -26,7 +26,10 @@ const envSchema = z.object({
   CLOUDINARY_API_SECRET: z.string(),
   SYSTEM_PRIVATE_KEY: z.string(),
   FEDAPAY_SECRET_KEY: z.string(),
+  FEDAPAY_PUBLIC_KEY: z.string(),
   PINATA_API_KEY: z.string(),
+  PINATA_API_SECRET: z.string(),
+  PINATA_JWT: z.string(),
   ALGORITHM: z._default(z.string(), "aes-256-ocb"),
 });
 
