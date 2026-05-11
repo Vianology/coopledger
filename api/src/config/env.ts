@@ -31,6 +31,7 @@ const envSchema = z.object({
   PINATA_API_SECRET: z.string(),
   PINATA_JWT: z.string(),
   ALGORITHM: z._default(z.string(), "aes-256-ocb"),
+  CONTRACT_ADDRESS: z.string(),
 });
 
 const _env = envSchema.safeParse(process.env);
