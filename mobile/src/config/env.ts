@@ -5,7 +5,7 @@ const envSchema = z.object({
     z.enum(["development", "test", "production"]),
     "development",
   ),
-  API_BASE_URL: z.string(),
+  API_BASE_URL: z._default(z.string(), "https://coopledger-api.onrender.com"),
 });
 
 const _env = envSchema.safeParse(process.env);
@@ -13,7 +13,6 @@ const _env = envSchema.safeParse(process.env);
 if (!_env.success) {
   console.error("Invalid environment variables");
   console.error(_env.error.issues.map((issue) => issue.message).join("\n"));
-  process.exit(1);
 }
 
 export const env = _env.data;
