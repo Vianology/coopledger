@@ -1,5 +1,5 @@
 import { Wallet } from "ethers";
-import { prisma } from "utils/prisma";
+import { prisma } from "@/utils/prisma";
 import { encrypt } from "./crypto.service";
 
 export const onboardUserBlockchain = async (userId: string) => {

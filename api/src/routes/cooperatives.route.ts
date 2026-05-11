@@ -1,11 +1,15 @@
 import {
   approveCooperativeJoin,
   createCooperative,
+  getCooperatives,
   joinCooperative,
-} from "controllers/cooperatives.controller";
+} from "@/controllers/cooperatives.controller";
 import { Router } from "express";
-import { isAuthenticated, isPlatformAdmin } from "middlewares/auth.middleware";
-import { upload } from "server";
+import {
+  isAuthenticated,
+  isPlatformAdmin,
+} from "@/middlewares/auth.middleware";
+import { upload } from "@/server";
 
 const cooperativesRoutes = Router();
 

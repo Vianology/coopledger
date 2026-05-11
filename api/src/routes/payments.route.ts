@@ -1,9 +1,9 @@
 import {
   initiatePayment,
   paymentCallback,
-} from "controllers/payments.controller";
+} from "@/controllers/payments.controller";
 import { Router } from "express";
-import { isAuthenticated } from "middlewares/auth.middleware";
+import { isAuthenticated } from "@/middlewares/auth.middleware";
 
 const paymentsRoutes = Router();
 

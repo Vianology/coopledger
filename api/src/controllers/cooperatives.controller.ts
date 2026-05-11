@@ -1,8 +1,12 @@
-import { MembershipGrade, MembershipRole, MembershipStatus } from "db/enums";
+import { MembershipGrade, MembershipRole, MembershipStatus } from "@/db/enums";
 import type { Request, Response } from "express";
-import { cloudinary, pinata } from "server";
-import { encrypt, encryptFile, generateCoopKey } from "services/crypto.service";
-import { prisma } from "utils/prisma";
+import { cloudinary, pinata } from "@/server";
+import {
+  encrypt,
+  encryptFile,
+  generateCoopKey,
+} from "@/services/crypto.service";
+import { prisma } from "@/utils/prisma";
 
 export async function createCooperative(req: Request, res: Response) {
   const { name, description, founders, latitude, longitude } = req.body;

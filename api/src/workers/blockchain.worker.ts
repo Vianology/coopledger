@@ -1,8 +1,8 @@
 import { Worker } from "bullmq";
 import { ethers } from "ethers";
-import { decrypt } from "services/crypto.service";
-import { prisma } from "utils/prisma";
-import { blockchainQueue } from "utils/queue";
+import { decrypt } from "@/services/crypto.service";
+import { prisma } from "@/utils/prisma";
+import { blockchainQueue } from "@/utils/queue";
 
 const provider = new ethers.JsonRpcProvider(process.env.POLYGON_RPC_URL);
 

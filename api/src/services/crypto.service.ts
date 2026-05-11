@@ -1,5 +1,5 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
-import { env } from "config/env";
+import { env } from "@/config/env";
 
 const ALGORITHM = env.ALGORITHM;
 const ENCRYPTION_KEY = env.ENCRYPTION_KEY;

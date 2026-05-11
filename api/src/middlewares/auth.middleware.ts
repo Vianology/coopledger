@@ -1,8 +1,8 @@
 import { fromNodeHeaders } from "better-auth/node";
-import { UserRole } from "db/enums";
+import { UserRole } from "@/db/enums";
 import type { NextFunction, Request, Response } from "express";
-import { auth } from "utils/auth";
-import { prisma } from "utils/prisma";
+import { auth } from "@/utils/auth";
+import { prisma } from "@/utils/prisma";
 
 declare global {
   namespace Express {

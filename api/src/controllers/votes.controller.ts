@@ -1,6 +1,6 @@
-import { VoteStatus, type VoteType } from "db/enums";
+import { VoteStatus, type VoteType } from "@/db/enums";
 import type { Request, Response } from "express";
-import { prisma } from "utils/prisma";
+import { prisma } from "@/utils/prisma";
 
 export async function proposeVote(req: Request, res: Response) {
   const {

@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import * as IdentityService from "services/identity.service";
+import * as IdentityService from "@/services/identity.service";
 
 export const finalizeOnboarding = async (req: Request, res: Response) => {
   try {
