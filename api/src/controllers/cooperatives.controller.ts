@@ -1,6 +1,6 @@
 import { MembershipGrade, MembershipRole, MembershipStatus } from "@/db/enums";
 import type { Request, Response } from "express";
-import { cloudinary, pinata } from "@/server";
+import { cloudinary, pinata } from "@/utils/storage";
 import {
   encrypt,
   encryptFile,

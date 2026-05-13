@@ -9,7 +9,7 @@ import {
   isAuthenticated,
   isPlatformAdmin,
 } from "@/middlewares/auth.middleware";
-import { upload } from "@/server";
+import { upload } from "@/utils/upload";
 
 const cooperativesRoutes = Router();
 
